@@ -1,3 +1,4 @@
+import { ServiceResponse } from "./types";
 import axios, { AxiosError } from "axios";
 import API_PATHS from "~/constants/apiPaths";
 import { AvailableProduct } from "~/models/Product";
@@ -8,9 +9,8 @@ export function useAvailableProducts() {
   return useQuery<AvailableProduct[], AxiosError>(
     "available-products",
     async () => {
-      const res = await axios.get<AvailableProduct[]>(
-        `${API_PATHS.bff}/product/available`
-      );
+      const res = await axios.get<AvailableProduct[]>(API_PATHS.products);
+
       return res.data;
     }
   );
@@ -28,10 +28,15 @@ export function useAvailableProduct(id?: string) {
   return useQuery<AvailableProduct, AxiosError>(
     ["product", { id }],
     async () => {
-      const res = await axios.get<AvailableProduct>(
-        `${API_PATHS.bff}/product/${id}`
+      const res = await axios.get<ServiceResponse<AvailableProduct>>(
+        `${API_PATHS.products}/${id}`
       );
-      return res.data;
+
+      if (res.data.errorMessage) {
+        throw new Error(res.data.errorMessage);
+      }
+
+      return res.data.result;
     },
     { enabled: !!id }
   );
